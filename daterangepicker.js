@@ -347,15 +347,10 @@
             if (start == null || end == null) return;
             if (end.isBefore(start)) return;
 
-            this.oldStartDate = this.startDate.clone();
-            this.oldEndDate = this.endDate.clone();
-
             this.startDate = start;
             this.endDate = end;
 
-            if (!this.startDate.isSame(this.oldStartDate) || !this.endDate.isSame(this.oldEndDate))
-                this.notify();
-
+            this.notify();
             this.updateCalendars();
         },
 
@@ -513,6 +508,9 @@
             if (cal.hasClass('left')) {
                 var startDate = this.leftCalendar.calendar[row][col];
                 var endDate = this.endDate;
+                if(this.startDate.isSame(startDate)){
+                    endDate = startDate
+                }
                 if (typeof this.dateLimit == 'object') {
                     var maxDate = moment(startDate).add(this.dateLimit).startOf('day');
                     if (endDate.isAfter(maxDate)) {
@@ -522,6 +520,9 @@
             } else {
                 var startDate = this.startDate;
                 var endDate = this.rightCalendar.calendar[row][col];
+                if(this.endDate.isSame(endDate)){
+                    startDate = endDate
+                }
                 if (typeof this.dateLimit == 'object') {
                     var minDate = moment(endDate).subtract(this.dateLimit).startOf('day');
                     if (startDate.isBefore(minDate)) {
@@ -539,7 +540,7 @@
             } else if (startDate.isAfter(endDate)) {
                 $(e.target).addClass('active');
                 this.startDate = startDate;
-                this.endDate = moment(startDate).add('day', 1).startOf('day');
+                this.endDate = moment(startDate).add('day', 0).startOf('day');
             }
 
             this.leftCalendar.month.month(this.startDate.month()).year(this.startDate.year());
@@ -599,13 +600,13 @@
             }
 
             if (isLeft) {
-                var start = this.startDate.clone();
+                var start = this.startDate;
                 start.hour(hour);
                 start.minute(minute);
                 this.startDate = start;
                 this.leftCalendar.month.hour(hour).minute(minute);
             } else {
-                var end = this.endDate.clone();
+                var end = this.endDate;
                 end.hour(hour);
                 end.minute(minute);
                 this.endDate = end;
@@ -668,14 +669,13 @@
             if (dayOfWeek == this.locale.firstDay)
                 startDay = daysInLastMonth - 6;
 
-            var curDate = moment([lastYear, lastMonth, startDay, 12, minute]);
-            for (var i = 0, col = 0, row = 0; i < 42; i++, col++, curDate = moment(curDate).add('hour', 24)) {
+            var curDate = moment([lastYear, lastMonth, startDay, hour, minute]);
+            for (var i = 0, col = 0, row = 0; i < 42; i++, col++, curDate = moment(curDate).add('day', 1)) {
                 if (i > 0 && col % 7 == 0) {
                     col = 0;
                     row++;
                 }
-                calendar[row][col] = curDate.clone().hour(hour);
-                curDate.hour(12);
+                calendar[row][col] = curDate;
             }
 
             return calendar;
@@ -700,7 +700,7 @@
             var currentYear = selected.year();
             var maxYear = (maxDate && maxDate.year()) || (currentYear + 5);
             var minYear = (minDate && minDate.year()) || (currentYear - 50);
-            var yearHtml = '<select class="yearselect">';
+            var yearHtml = '<select class="yearselect">'
 
             for (var y = minYear; y <= maxYear; y++) {
                 yearHtml += '<option value="' + y + '"' +
